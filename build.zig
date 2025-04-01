@@ -10,9 +10,6 @@ pub fn build(b: *std.Build) void {
         .abi = .none,
     };
 
-    // Get native target for setup_zerver
-    const native_target = b.standardTargetOptions(.{});
-
     // Use ReleaseFast optimization by default for better WebAssembly performance
     // This helps reduce warm-up jitter by generating pre-optimized Wasm code
     const optimize = b.option(
@@ -36,18 +33,11 @@ pub fn build(b: *std.Build) void {
     // Install in the output directory
     b.installArtifact(exe);
 
-    // Build setup_zerver executable first - using native target
-    const setup_zerver = b.addExecutable(.{
-        .name = "setup_zerver",
-        .root_source_file = b.path("setup_zerver.zig"),
-        .target = native_target,
-        .optimize = optimize,
-    });
-    b.installArtifact(setup_zerver);
-
-    // Run setup_zerver to create directories and get http-zerver
-    const setup_path = b.getInstallPath(.bin, "setup_zerver");
-    const make_dist = b.addSystemCommand(&[_][]const u8{setup_path});
+    // Create dist directory
+    const make_dist = b.addSystemCommand(if (builtin.os.tag == .windows)
+        &[_][]const u8{ "cmd", "/C", "mkdir", "dist" }
+    else
+        &[_][]const u8{ "mkdir", "-p", "dist" });
     make_dist.step.dependOn(b.getInstallStep());
 
     // Create a step to copy the WASM file to the root dist directory
@@ -63,17 +53,13 @@ pub fn build(b: *std.Build) void {
     });
     copy_web.step.dependOn(&make_dist.step);
 
-    // Add a run step to start http-zerver
-    const server_path = if (builtin.os.tag == .windows)
-        "http-zerver.exe"
-    else
-        "./http-zerver";
-
+    // Add a run step to start Python's HTTP server
     const run_cmd = b.addSystemCommand(&[_][]const u8{
-        server_path,
-        "--port",
+        "python",
+        "-m",
+        "http.server",
         "8000",
-        "--dir",
+        "--directory",
         "dist",
     });
     run_cmd.step.dependOn(&copy_wasm.step);

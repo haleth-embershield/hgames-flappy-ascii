@@ -1,3 +1,5 @@
+# NEED TO DO - UPDATE README AND FORMAT TO MATCH NEW GUIDELINES FOR HGAMES TEMPLATES
+
 # ASCII Flappy Bird
 
 A retro-style Flappy Bird game rendered entirely in ASCII characters, built with Zig targeting WebAssembly. This is a learning project for me.
@@ -158,10 +160,6 @@ fn renderAsGlyphs(img: Image, params: RenderParams) !GlyphOutput {
 - [ ] Create abstraction layer for rendering backend
 - [ ] Improve error handling and recovery
 - [ ] Clean up deprecated code paths
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 
